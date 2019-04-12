@@ -96,12 +96,11 @@ def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, 
             
             running_loss = 0.0
             
-            
             # iterate over data
             loader = dataloaders[phase]
             data_size = len(loader.dataset)
             if phase == "train" and max_samples is not None:
-                loader = itertools.islice(data_size, max_samples)
+                loader = itertools.islice(loader, max_samples)
                 data_size = max_samples
             for inputs, labels in loader:
                 inputs = inputs.to(device)
@@ -109,7 +108,6 @@ def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, 
                 
                 # reset optimizer gradients
                 optimizer.zero_grad()
-                
                 
                 # forward pass
                 # track history if only in train
@@ -153,7 +151,7 @@ class Trainer():
         self.model = get_model(finetune=finetune)
         params = self.model.parameters() if finetune else self.model.classifier.parameters()
         self.optimizer = optim.Adam(params, lr=lr)
-        self.max_train_samples=None
+        self.max_train_samples=max_train_samples
         self.criterion = nn.BCEWithLogitsLoss()
         self.dataloaders = {
             "train": get_loader(get_dataset("train")),
