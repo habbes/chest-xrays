@@ -3,3 +3,4 @@ data/CheXpert*
 .vscode
 *.cpython
 __pycache__
+ipynb_checkpoints
