@@ -228,6 +228,7 @@ def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
         plt.title(LABELS[i])
         plt.legend(loc="lower right")
         if save_to_file:
-            plt.savefig(path.join(RESULTS_DIR, f'{prefix}auc_{LABELS[i]}.png'))
+            filename = f'{prefix}auc_{LABELS[i].replace(" ", "_")}.png'
+            plt.savefig(path.join(RESULTS_DIR, filename))
         else:
             plt.show()
