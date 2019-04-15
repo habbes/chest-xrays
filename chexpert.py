@@ -156,11 +156,12 @@ def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, 
         "losses": epoch_losses
     }
 
-def evaluate(model, dataloader):
+def evaluate(model, dataloader, device):
     model.eval()
     all_preds = None
     all_labels = None
     for inputs, labels in dataloader:
+        inputs = inputs.to(device)
         outputs = model(inputs)
         preds = torch.sigmoid(outputs)
         np_preds = preds.detach().cpu().numpy()
@@ -204,7 +205,7 @@ class Trainer():
     
     def evaluate(self):
         model = self.train_results["model"]
-        return evaluate(model, get_loader(get_dataset("val")))
+        return evaluate(model, get_loader(get_dataset("val")), device=self.device)
 
 
 def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
