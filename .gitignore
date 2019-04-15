@@ -4,3 +4,6 @@ data/CheXpert*
 *.cpython
 __pycache__
 .ipynb_checkpoints
+results/*.png
+results/*.pth
+*.log

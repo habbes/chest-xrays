@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
+import sklearn.metrics as mt
+import matplotlib.pyplot as plt
 from PIL import Image
 
 import os.path as path
@@ -15,6 +17,7 @@ import itertools
 DATA_DIR = './data'
 TRAIN_CSV = './data/CheXpert-v1.0-small/train.csv'
 VALID_CSV = './data/CheXpert-v1.0-small/valid.csv'
+RESULTS_DIR = './results'
 
 LABELS = ['Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Pleural Effusion']
 
@@ -34,7 +37,7 @@ class CheXpertDataset(Dataset):
     def __getitem__(self, idx):
         img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
         img = Image.open(img_path).convert('RGB')
-        labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, 0.0).values
+        labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, 1.0).values
         labels = torch.from_numpy(labels)
         if self.transform:
             img = self.transform(img)
@@ -61,8 +64,11 @@ def get_train_loader():
 def get_val_loader():
     return get_loader((get_dataset('val')), shuffle=False)
 
-def get_model(pretrained=True, finetune=False):
-    model = models.densenet121(pretrained=True)
+def get_model(pretrained=True, finetune=False, arch="densenet"):
+    if arch == "resnet":
+        model = models.resnet101(pretrained=pretrained)
+    else:
+        model = models.densenet121(pretrained=pretrained)
     if not finetune:
         for param in model.parameters():
             param.requires_grad = False
@@ -76,10 +82,11 @@ def get_optimizer(params, **kwargs):
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()
-    val_acc_history = []
-    
+
     best_model_wts = copy.deepcopy(model.state_dict())
     least_loss = float("inf")
+
+    epoch_losses = { "train": [], "val": [] }
     
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -132,9 +139,9 @@ def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, 
             
             # keep copy if best model so far
             if phase == 'val' and epoch_loss < least_loss:
-                least_loss = least_loss
+                least_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
-            
+            epoch_losses[phase].append(epoch_loss)
         print()
         
     time_elapsed = time.time() - since
@@ -144,11 +151,32 @@ def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, 
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model
+    return {
+        "model": model,
+        "losses": epoch_losses
+    }
+
+def evaluate(model, dataloader):
+    model.eval()
+    all_preds = None
+    all_labels = None
+    for inputs, labels in dataloader:
+        outputs = model(inputs)
+        preds = torch.sigmoid(outputs)
+        np_preds = preds.detach().cpu().numpy()
+        np_labels = labels.data.cpu().numpy()
+        if all_preds is None:
+            all_preds = np_preds
+            all_labels = np_labels
+        else:
+            all_preds = np.vstack((all_preds, np_preds))
+            all_labels = np.vstack((all_labels, np_labels))
+    return all_labels, all_preds
+            
 
 class Trainer():
-    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3):
-        self.model = get_model(finetune=finetune)
+    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet"):
+        self.model = get_model(finetune=finetune, arch="densenet")
         params = self.model.parameters() if finetune else self.model.classifier.parameters()
         self.optimizer = optim.Adam(params, lr=lr)
         self.max_train_samples=max_train_samples
@@ -160,9 +188,10 @@ class Trainer():
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         self.epochs=epochs
-    
+        self.train_results = None;
+
     def train(self):
-        return train_model(
+        self.train_results = train_model(
             model=self.model,
             dataloaders=self.dataloaders,
             criterion=self.criterion,
@@ -171,3 +200,33 @@ class Trainer():
             num_epochs=self.epochs,
             max_samples=self.max_train_samples
         )
+        return self.train_results
+    
+    def evaluate(self):
+        model = self.train_results["model"]
+        return evaluate(model, get_loader(get_dataset("val")))
+
+
+def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
+    fpr = {}
+    tpr = {}
+    roc_auc = {}
+    for i in range(len(LABELS)):
+        fpr[i], tpr[i], _ = mt.roc_curve(y_true[:, i], y_pred[:, i])
+        roc_auc[i] = mt.auc(fpr[i], tpr[i])
+
+        plt.figure()
+        lw = 2
+        plt.plot(fpr[i], tpr[i], color='darkorange',
+                lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[i])
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(LABELS[i])
+        plt.legend(loc="lower right")
+        if save_to_file:
+            plt.savefig(path.join(RESULTS_DIR, f'{prefix}auc_{LABELS[i]}.png'))
+        else:
+            plt.show()
