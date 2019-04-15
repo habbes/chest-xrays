@@ -24,7 +24,7 @@ if __name__ == "__main__":
         epochs= args.epochs,
         lr=args.lr,
         arch=args.arch,
-        finetue=args.finetune
+        finetune=args.finetune
     )
     trainer.train()
     y_true, y_pred = trainer.evaluate()
