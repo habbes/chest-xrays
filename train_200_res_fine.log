@@ -1,0 +1,17 @@
+Epoch 0/2
+----------
+train Loss: 36.9863
+val Loss: 0.5782
+
+Epoch 1/2
+----------
+train Loss: 35.6910
+val Loss: 0.5529
+
+Epoch 2/2
+----------
+train Loss: 35.4258
+val Loss: 0.5506
+
+Training complete in 5m 42s
+Least loss: 0.550636
