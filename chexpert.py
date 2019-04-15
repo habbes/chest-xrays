@@ -172,6 +172,7 @@ def evaluate(model, dataloader, device):
         else:
             all_preds = np.vstack((all_preds, np_preds))
             all_labels = np.vstack((all_labels, np_labels))
+    print("AVG AUC", mt.roc_auc_score(all_labels, all_preds))
     return all_labels, all_preds
             
 
