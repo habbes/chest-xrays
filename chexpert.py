@@ -178,6 +178,7 @@ def evaluate(model, dataloader, device):
 
 class Trainer():
     def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet"):
+        print("Training using options", "arch", arch, "finetune", finetune)
         self.model = get_model(finetune=finetune, arch="densenet")
         params = self.model.parameters() if finetune else self.model.classifier.parameters()
         self.optimizer = optim.Adam(params, lr=lr)
