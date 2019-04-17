@@ -28,12 +28,12 @@ ln -s  /data/chexpert/CheXpert-v1.0-small CheXpert-v1.0-small
 You can train the model by running the `start.py` script:
 
 ```
-python start.py
+python train.py
 ```
 
 The script accepts a number of parameters like learning rate, number of epochs, etc.
 to allow you to tune the training process, use `-h` option to see all available options:
 
 ```
-python start.py -h
+python train.py -h
 ```
