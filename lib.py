@@ -177,8 +177,9 @@ def evaluate(model, dataloader, device):
             
 
 class Trainer():
-    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet"):
+    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./model/model.pth"):
         print("Training using options", "arch", arch, "finetune", finetune)
+        self.output_path = output_path
         self.model = get_model(finetune=finetune, arch="densenet")
         params = self.model.parameters() if finetune else self.model.classifier.parameters()
         self.optimizer = optim.Adam(params, lr=lr)
@@ -203,6 +204,8 @@ class Trainer():
             num_epochs=self.epochs,
             max_samples=self.max_train_samples
         )
+        best_model = self.train_results["model"]
+        torch.save(best_model.state_dict(), self.output_path)
         return self.train_results
     
     def evaluate(self):
