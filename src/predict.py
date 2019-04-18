@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import torch
 import os
+import time
 
 def predict(model, dataloader, device):
     model.eval()
@@ -29,7 +30,7 @@ def aggregate_studies(preds, paths):
         study = os.path.dirname(p)
         scores = preds[i]
         if study in results:
-            results[study] = np.max(np.vstack(results[study], scores), axis=0)
+            results[study] = np.max(np.vstack((results[study], scores)), axis=0)
         else:
             results[study] = scores
     return results
@@ -38,7 +39,6 @@ def results_to_df(agg_results):
     rows = []
     for study, scores in agg_results.items():
         row = [study] + list(scores)
-        print('R', row, scores)
         rows.append(row)
     return pd.DataFrame(rows, columns=['Study'] + LABELS)
 
@@ -57,10 +57,16 @@ class Predict():
         self.result_df = None
     
     def predict(self):
+        print(f"Running predictions on dataset '{self.input_csv}' using model '{self.model_path}'...")
+        started = time.time()
         self.raw_results = predict(self.model, self.dataloader, self.device)
+        duration = time.time() - started
+        print(f"Prediction completed in {duration}s")
+        print("Collecting results...")
         aggregated = aggregate_studies(*self.raw_results)
         self.result_df = results_to_df(aggregated)
         self.result_df.to_csv(self.output_csv, index=False)
+        print(f"Results saved to {self.output_csv}")
         return self.result_df
 
         

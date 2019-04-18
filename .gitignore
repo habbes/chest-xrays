@@ -4,3 +4,5 @@ data/CheXpert*
 *.cpython
 __pycache__
 *.ipynb_checkpoints*
+results/*
+!results/.gitkeep
