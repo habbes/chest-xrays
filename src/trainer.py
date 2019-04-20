@@ -33,78 +33,82 @@ def get_optimizer(params, **kwargs):
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()
-
     best_model_wts = copy.deepcopy(model.state_dict())
     least_loss = float("inf")
-
     epoch_losses = { "train": [], "val": [] }
     
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
         
-        
         # each epoch has training and validation phase
         for phase in ['train', 'val']:
-            if phase == 'train':
-                model.train()
-            else:
-                model.eval()
-            
-            
-            running_loss = 0.0
-            
-            # iterate over data
-            loader = dataloaders[phase]
-            data_size = len(loader.dataset)
-            if phase == "train" and max_samples is not None:
-                loader = itertools.islice(loader, max_samples)
-                data_size = max_samples
-            for inputs, labels in loader:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-                
-                # reset optimizer gradients
-                optimizer.zero_grad()
-                
-                # forward pass
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
-                    
-                    _, preds = torch.max(outputs, 1)
-                    
-                    # backward pass if training
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-                
-                # statistics
-                running_loss += loss.item() * inputs.size(0)
-            
-            epoch_loss = running_loss / data_size
-
-            print('{} Loss: {:.4f}'.format(
-                phase, epoch_loss))
-            
+            phase_results = train_epoch_phase(
+                phase,
+                model,
+                dataloaders[phase],
+                criterion, optimizer,
+                device, max_samples
+            )
+            epoch_loss = phase_results["epoch_loss"]
             # keep copy if best model so far
             if phase == 'val' and epoch_loss < least_loss:
                 least_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
             epoch_losses[phase].append(epoch_loss)
+
         print()
         
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
     print('Least loss: {:4f}'.format(least_loss))
-
     # load best model weights
     model.load_state_dict(best_model_wts)
     return {
         "model": model,
         "losses": epoch_losses
+    }
+
+def train_epoch_phase(phase, model, loader, criterion, optimizer, device, max_samples=None):
+    if phase == 'train':
+        model.train()
+    else:
+        model.eval()
+    running_loss = 0.0
+
+    data_size = len(loader.dataset)
+    if phase == "train" and max_samples is not None:
+        loader = itertools.islice(loader, max_samples)
+        data_size = max_samples
+    for inputs, labels in loader:
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        
+        # reset optimizer gradients
+        optimizer.zero_grad()
+        
+        # forward pass
+        # track history if only in train
+        with torch.set_grad_enabled(phase == 'train'):
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            
+            # backward pass if training
+            if phase == 'train':
+                loss.backward()
+                optimizer.step()
+        
+        # statistics
+        running_loss += loss.item() * inputs.size(0)
+    
+    epoch_loss = running_loss / data_size
+
+    print('{} Loss: {:.4f}'.format(
+        phase, epoch_loss))
+    
+    return {
+        "epoch_loss": epoch_loss
     }
 
 def evaluate(model, dataloader, device):
