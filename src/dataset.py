@@ -12,6 +12,7 @@ TRAIN_CSV = './data/CheXpert-v1.0-small/train.csv'
 VALID_CSV = './data/CheXpert-v1.0-small/valid.csv'
 
 LABELS = ['Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Pleural Effusion']
+BATCH_SIZE=64
 
 def data_path(file_path):
     return path.join(DATA_DIR, file_path)
@@ -66,7 +67,7 @@ def get_dataset(train_or_val):
     return TrainingDataset(csv_file, DATA_DIR, get_transformer())
 
 def get_loader(dataset, shuffle=True):
-    return DataLoader(dataset, batch_size=64, shuffle=shuffle, num_workers=4)
+    return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=4)
 
 def get_train_loader():
     return get_loader((get_dataset('train')))

@@ -11,114 +11,106 @@ import copy
 import time
 import itertools
 
-from dataset import get_loader, get_dataset, LABELS
+from dataset import get_loader, get_dataset, LABELS, BATCH_SIZE
+from model import get_model, get_optimizer
+from util import CheckpointManager
 
 RESULTS_DIR = './results'
-
-def get_model(pretrained=True, finetune=False, arch="densenet"):
-    if arch == "resnet":
-        model = models.resnet101(pretrained=pretrained)
-    else:
-        model = models.densenet121(pretrained=pretrained)
-    if not finetune:
-        for param in model.parameters():
-            param.requires_grad = False
-    in_features = model.classifier.in_features
-    out_features = len(LABELS)
-    model.classifier = nn.Linear(in_features, out_features)
-    return model
-
-def get_optimizer(params, **kwargs):
-    return optim.Adam(params, **kwargs)
+CHECKPOINT_COUNT = 1#4800
+CHECKPOINTS_PER_RUN = 2#10
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()
-    best_model_wts = copy.deepcopy(model.state_dict())
     least_loss = float("inf")
     epoch_losses = { "train": [], "val": [] }
+    checkpoints = CheckpointManager(max_items=CHECKPOINTS_PER_RUN)
     
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
         
         # each epoch has training and validation phase
-        for phase in ['train', 'val']:
-            phase_results = train_epoch_phase(
-                phase,
-                model,
-                dataloaders[phase],
-                criterion, optimizer,
-                device, max_samples
-            )
-            epoch_loss = phase_results["epoch_loss"]
-            # keep copy if best model so far
-            if phase == 'val' and epoch_loss < least_loss:
-                least_loss = epoch_loss
-                best_model_wts = copy.deepcopy(model.state_dict())
-            epoch_losses[phase].append(epoch_loss)
-
+        phase_results = train_epoch(
+            model=model,
+            dataloaders=dataloaders,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
+            checkpoints=checkpoints,
+            max_samples=max_samples,
+            time_started=since
+        )
+        epoch_loss = phase_results["epoch_loss"]
+        epoch_losses['train'].append(epoch_loss)
+        if epoch_loss < least_loss:
+            least_loss = epoch_loss
         print()
         
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
     print('Least loss: {:4f}'.format(least_loss))
-    # load best model weights
-    model.load_state_dict(best_model_wts)
     return {
-        "model": model,
-        "losses": epoch_losses
+        "losses": epoch_losses,
+        "checkpoints": checkpoints
     }
 
-def train_epoch_phase(phase, model, loader, criterion, optimizer, device, max_samples=None):
-    if phase == 'train':
-        model.train()
-    else:
-        model.eval()
+def train_epoch(model, dataloaders, criterion, optimizer, device, checkpoints, time_started, max_samples=None):
+    model.train()
     running_loss = 0.0
-
-    data_size = len(loader.dataset)
-    if phase == "train" and max_samples is not None:
-        loader = itertools.islice(loader, max_samples)
+    train_loader = dataloaders['train']
+    val_loader = dataloaders['val']
+    data_size = len(train_loader.dataset)
+    if max_samples is not None:
+        train_loader = itertools.islice(train_loader, max_samples)
         data_size = max_samples
-    for inputs, labels in loader:
+    for i, (inputs, labels) in enumerate(train_loader):
+        batch = i + 1
         inputs = inputs.to(device)
         labels = labels.to(device)
-        
-        # reset optimizer gradients
+
         optimizer.zero_grad()
-        
-        # forward pass
-        # track history if only in train
-        with torch.set_grad_enabled(phase == 'train'):
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            
-            # backward pass if training
-            if phase == 'train':
-                loss.backward()
-                optimizer.step()
-        
-        # statistics
+
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        loss.backward()
+        optimizer.step()
+
         running_loss += loss.item() * inputs.size(0)
+
+        if batch % CHECKPOINT_COUNT == 0:
+            # evaluate batch
+            batch_results = evaluate(model=model, dataloader=val_loader, device=device, criterion=criterion)
+            eval_labels, eval_preds, eval_loss = (
+                batch_results['labels'], batch_results['predictions'], batch_results['loss']
+            )
+            avg_auc = mt.roc_auc_score(eval_labels, eval_preds)
+            checkpoints.add(model, loss.item(), avg_auc, eval_loss)
+            elapsed = time.time() - time_started
+            print('Batch', batch, 'Batch loss', loss.item(), 'Val AUC', avg_auc, 'Val Loss', eval_loss, "Elapsed", elapsed)
     
     epoch_loss = running_loss / data_size
-
     print('{} Loss: {:.4f}'.format(
-        phase, epoch_loss))
+        'Training', epoch_loss))
     
     return {
         "epoch_loss": epoch_loss
     }
 
-def evaluate(model, dataloader, device):
+def evaluate(model, dataloader, device, criterion=None):
     model.eval()
+    running_loss = 0.0
     all_preds = None
     all_labels = None
     for inputs, labels in dataloader:
         inputs = inputs.to(device)
-        outputs = model(inputs)
-        preds = torch.sigmoid(outputs)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
+            preds = torch.sigmoid(outputs)
+            if criterion is not None:
+                loss = criterion(outputs, labels)
+                running_loss += loss.item() * inputs.size(0)
         np_preds = preds.detach().cpu().numpy()
         np_labels = labels.data.cpu().numpy()
         if all_preds is None:
@@ -127,8 +119,13 @@ def evaluate(model, dataloader, device):
         else:
             all_preds = np.vstack((all_preds, np_preds))
             all_labels = np.vstack((all_labels, np_labels))
-    print("AVG AUC", mt.roc_auc_score(all_labels, all_preds))
-    return all_labels, all_preds
+    
+    epoch_loss = None if criterion is None else running_loss / len(dataloader.dataset)
+    return {
+        "labels": all_labels,
+        "predictions": all_preds,
+        "loss": epoch_loss
+    }
             
 
 class Trainer():
@@ -147,7 +144,7 @@ class Trainer():
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         self.epochs=epochs
-        self.train_results = None;
+        self.train_results = None
 
     def train(self):
         self.train_results = train_model(
@@ -159,13 +156,17 @@ class Trainer():
             num_epochs=self.epochs,
             max_samples=self.max_train_samples
         )
-        best_model = self.train_results["model"]
-        torch.save(best_model.state_dict(), self.output_path)
+        checkpoints = self.train_results["checkpoints"]
+        checkpoints.save(self.output_path)
         return self.train_results
     
     def evaluate(self):
-        model = self.train_results["model"]
-        return evaluate(model, get_loader(get_dataset("val")), device=self.device)
+        checkpoint = self.train_results["checkpoints"].checkpoints[0]
+        self.model.load_state_dict(checkpoint["model"])
+        results = evaluate(self.model, get_loader(get_dataset("val")), device=self.device)
+        labels, preds = results["labels"], results["predictions"]
+        print("AVG AUC", mt.roc_auc_score(labels, preds))
+        return labels, preds
 
 
 def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
