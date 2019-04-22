@@ -12,7 +12,7 @@ TRAIN_CSV = './data/CheXpert-v1.0-small/train.csv'
 VALID_CSV = './data/CheXpert-v1.0-small/valid.csv'
 
 LABELS = ['Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Pleural Effusion']
-BATCH_SIZE=64
+BATCH_SIZE = 16
 
 def data_path(file_path):
     return path.join(DATA_DIR, file_path)
