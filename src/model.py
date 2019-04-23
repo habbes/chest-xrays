@@ -5,6 +5,7 @@ from torchvision import models
 import os
 
 from dataset import LABELS
+from util import get_device
 
 def get_model(pretrained=True, finetune=False, arch="densenet"):
     if arch == "resnet":
@@ -66,6 +67,7 @@ def load_ensemble_from_dirs(model_dirs):
     """
     models = load_models(model_dirs)
     ensemble = Ensemble(models)
+    ensemble.to(get_device())
     return ensemble
 
 def load_ensemble_from_checkpoints(checkpoints):
@@ -75,4 +77,5 @@ def load_ensemble_from_checkpoints(checkpoints):
         model.load_state_dict(chk["model"])
         models.append(model)
     ensemble = Ensemble(models)
+    ensemble.to(get_device())
     return ensemble

@@ -14,6 +14,8 @@ if __name__ == '__main__':
         help="Max number of training batches to use for training")
     parser.add_argument("--epochs", type=int, default=3, metavar="e",
         help="Number of epochs (default: 3)")
+    parser.add_argument("--finetune", type=bool, default=False, metavar="f",
+        help="Whether to fine tune all weights during training, otherwise only weights in the final FC layer are trained (default: false)")
     parser.add_argument("--output_path", type=str, metavar="o",
         default="./models/baseline/m1,./models/baseline/m2,./models/baseline/m3",
         help="comma-separated directories where to save the trained models. Training is performed for each direcotry specified.")
@@ -27,6 +29,7 @@ if __name__ == '__main__':
         trainer = Trainer(
             max_train_samples=args.max_train_samples,
             epochs=args.epochs,
+            finetune=args.finetune,
             output_path=model_dir
         )
         trainer.train()
