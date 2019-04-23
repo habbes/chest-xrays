@@ -3,6 +3,9 @@ import torch
 import copy
 import os
 
+def get_device():
+    torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 class CheckpointManager():
     def __init__(self, max_items=10):
         self.checkpoints = []

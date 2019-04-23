@@ -12,12 +12,12 @@ import time
 import itertools
 
 from dataset import get_loader, get_dataset, LABELS, BATCH_SIZE
-from model import get_model, get_optimizer
+from model import get_model, get_optimizer, load_ensemble_from_checkpoints
 from util import CheckpointManager
 
 RESULTS_DIR = './results'
-CHECKPOINT_COUNT = 4800
-CHECKPOINTS_PER_RUN = 10
+CHECKPOINT_COUNT = 1#4800
+CHECKPOINTS_PER_RUN = 2#10
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()
@@ -129,7 +129,7 @@ def evaluate(model, dataloader, device, criterion=None):
             
 
 class Trainer():
-    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./model/model.pth"):
+    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./models/model"):
         print("Training using options", "arch", arch, "finetune", finetune)
         self.output_path = output_path
         self.model = get_model(finetune=finetune, arch="densenet")
@@ -161,15 +161,14 @@ class Trainer():
         return self.train_results
     
     def evaluate(self):
-        checkpoint = self.train_results["checkpoints"].checkpoints[0]
-        self.model.load_state_dict(checkpoint["model"])
-        results = evaluate(self.model, get_loader(get_dataset("val")), device=self.device)
+        model = load_ensemble_from_checkpoints(self.train_results["checkpoints"].checkpoints)
+        results = evaluate(model, get_loader(get_dataset("val")), device=self.device)
         labels, preds = results["labels"], results["predictions"]
         print("AVG AUC", mt.roc_auc_score(labels, preds))
         return labels, preds
 
 
-def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
+def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix="", output_path=RESULTS_DIR):
     fpr = {}
     tpr = {}
     roc_auc = {}
@@ -190,6 +189,6 @@ def plot_roc_auc(y_true, y_pred, save_to_file=False, prefix=""):
         plt.legend(loc="lower right")
         if save_to_file:
             filename = f'{prefix}auc_{LABELS[i].replace(" ", "_")}.png'
-            plt.savefig(path.join(RESULTS_DIR, filename))
+            plt.savefig(path.join(output_path, filename))
         else:
             plt.show()

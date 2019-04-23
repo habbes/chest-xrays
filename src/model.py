@@ -50,7 +50,8 @@ def load_models(model_dirs):
     """
     models = []
     for directory in model_dirs:
-        for filename in directory:
+        filenames = os.listdir(directory)
+        for filename in filenames:
             if filename.endswith('.pth'):
                 model_path = os.path.join(directory, filename)
                 model = get_model()
@@ -58,11 +59,20 @@ def load_models(model_dirs):
                 models.append(model)
     return models
 
-def load_ensemble_model(model_dirs):
+def load_ensemble_from_dirs(model_dirs):
     """
     Create ensemble classifier from models
     stored in the specified directories
     """
     models = load_models(model_dirs)
+    ensemble = Ensemble(models)
+    return ensemble
+
+def load_ensemble_from_checkpoints(checkpoints):
+    models = []
+    for chk in checkpoints:
+        model = get_model()
+        model.load_state_dict(chk["model"])
+        models.append(model)
     ensemble = Ensemble(models)
     return ensemble

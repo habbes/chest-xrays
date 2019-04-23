@@ -16,8 +16,8 @@ if __name__ == "__main__":
         help="prefix added to result output file names")
     parser.add_argument("--arch", type=str, default="densenet", metavar="a",
         help="model architecture to use, either 'densnet' or 'resnet'. Default is densenet")
-    parser.add_argument("--output_path", type=str, default="./model/model.pth", metavar="o",
-        help="file where to save trained model")
+    parser.add_argument("--output_path", type=str, default="./models/model", metavar="o",
+        help="file where to save trained models")
     
     args = parser.parse_args()
 
