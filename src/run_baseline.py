@@ -4,7 +4,7 @@ import sklearn.metrics as mt
 
 from trainer import Trainer, plot_roc_auc, evaluate
 from model import load_ensemble_from_dirs
-from util import get_device
+from util import get_device, display_elapsed_time
 from dataset import get_val_loader
 
 if __name__ == '__main__':
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         plot_roc_auc(y_true, y_pred, save_to_file=True, output_path=model_dir)
 
         print("=== Completed training of", model_dir, "===")
-        print("Total elapsed", time.time() - started)
+        display_elapsed_time(started, "Total elapsed")
         print()
     
     ensemble = load_ensemble_from_dirs(model_dirs)
@@ -51,4 +51,4 @@ if __name__ == '__main__':
     final_auc = mt.roc_auc_score(labels, preds)
     print("Ensemble Validation AUC Score", final_auc)
     plot_roc_auc(labels, preds, save_to_file=True, output_path="./models/baseline")
-    print("Total time taken", time.time() - started)
+    display_elapsed_time(started, "Total time taken")

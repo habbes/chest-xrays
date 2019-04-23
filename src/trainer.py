@@ -13,7 +13,7 @@ import itertools
 
 from dataset import get_loader, get_dataset, LABELS, BATCH_SIZE
 from model import get_model, get_optimizer, load_ensemble_from_checkpoints
-from util import CheckpointManager
+from util import CheckpointManager, display_elapsed_time
 
 RESULTS_DIR = './results'
 CHECKPOINT_COUNT = 480
@@ -87,8 +87,8 @@ def train_epoch(model, dataloaders, criterion, optimizer, device, checkpoints, t
             )
             avg_auc = mt.roc_auc_score(eval_labels, eval_preds)
             checkpoints.add(model, loss.item(), avg_auc, eval_loss)
-            elapsed = time.time() - time_started
-            print('Batch', batch, 'Batch loss', loss.item(), 'Val AUC', avg_auc, 'Val Loss', eval_loss, "Elapsed", elapsed)
+            print('Batch', batch, 'Batch loss', loss.item(), 'Val AUC', avg_auc, 'Val Loss', eval_loss)
+            display_elapsed_time(time_started)
     
     epoch_loss = running_loss / data_size
     print('{} Loss: {:.4f}'.format(
