@@ -105,6 +105,7 @@ def evaluate(model, dataloader, device, criterion=None):
     all_labels = None
     for inputs, labels in dataloader:
         inputs = inputs.to(device)
+        labels = labels.to(device)
         with torch.set_grad_enabled(False):
             outputs = model(inputs)
             preds = torch.sigmoid(outputs)
