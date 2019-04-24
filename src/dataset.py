@@ -19,10 +19,11 @@ def data_path(file_path):
 
 
 class TrainingDataset(Dataset):
-    def __init__(self, csv_file, data_dir, transform=None):
+    def __init__(self, csv_file, data_dir, transform=None, value_for_uncertain=1.0):
         self.df = pd.read_csv(csv_file)
         self.data_dir = data_dir
         self.transform = transform
+        self.value_for_uncertain = value_for_uncertain
     
     def __len__(self):
         return len(self.df)
@@ -30,7 +31,7 @@ class TrainingDataset(Dataset):
     def __getitem__(self, idx):
         img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
         img = Image.open(img_path).convert('RGB')
-        labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, 1.0).values
+        labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, self.value_for_uncertain).values
         labels = torch.from_numpy(labels)
         if self.transform:
             img = self.transform(img)
@@ -62,15 +63,15 @@ def get_transformer():
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-def get_dataset(train_or_val):
+def get_dataset(train_or_val, value_for_uncertain=1.0):
     csv_file = TRAIN_CSV if train_or_val == "train" else VALID_CSV
-    return TrainingDataset(csv_file, DATA_DIR, get_transformer())
+    return TrainingDataset(csv_file, DATA_DIR, get_transformer(), value_for_uncertain=value_for_uncertain)
 
 def get_loader(dataset, shuffle=True):
     return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=4)
 
-def get_train_loader():
-    return get_loader((get_dataset('train')))
+def get_train_loader(value_for_uncertain=1.0):
+    return get_loader((get_dataset('train'), value_for_uncertain))
 
 def get_val_loader():
     return get_loader((get_dataset('val')), shuffle=False)

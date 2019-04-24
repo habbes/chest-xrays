@@ -19,6 +19,8 @@ if __name__ == '__main__':
     parser.add_argument("--output_path", type=str, metavar="o",
         default="./models/baseline/m1,./models/baseline/m2,./models/baseline/m3",
         help="comma-separated directories where to save the trained models. Training is performed for each direcotry specified.")
+    parser.add_argument("--value_for_uncertain", type=float, metavar="u", default=1.0,
+        help="Value to replace uncertain labels with")
     
     args = parser.parse_args()
 
@@ -30,6 +32,7 @@ if __name__ == '__main__':
             max_train_samples=args.max_train_samples,
             epochs=args.epochs,
             finetune=args.finetune,
+            value_for_uncertain=args.value_for_uncertain,
             output_path=model_dir
         )
         trainer.train()
