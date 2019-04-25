@@ -34,7 +34,7 @@ class TrainingDataset(Dataset):
             labels = self._get_labels_with_best_uncertain_values(idx)
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
-            labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, self.value_for_uncertain).values
+            labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, value_for_uncertain).values
         labels = torch.from_numpy(labels)
         if self.transform:
             img = self.transform(img)
