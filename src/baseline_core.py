@@ -30,7 +30,8 @@ def run_baseline(
             epochs=epochs,
             finetune=finetune,
             value_for_uncertain=value_for_uncertain,
-            output_path=model_dir
+            output_path=model_dir,
+            arch="resnet"
         )
         trainer.train()
         y_true, y_pred = trainer.evaluate()

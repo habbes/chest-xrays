@@ -8,8 +8,8 @@ from dataset import LABELS
 from util import get_device
 
 def get_model(pretrained=True, finetune=False, arch="densenet"):
-    if arch == "densenet":
-        model = models.resnet101(pretrained=pretrained)
+    if arch == "resnet":
+        model = models.resnet18(pretrained=pretrained)
     else:
         model = models.densenet121(pretrained=pretrained)
     if not finetune:
@@ -17,7 +17,10 @@ def get_model(pretrained=True, finetune=False, arch="densenet"):
             param.requires_grad = False
     in_features = model.classifier.in_features
     out_features = len(LABELS)
-    model.classifier = nn.Linear(in_features, out_features)
+    if arch == "resnet":
+        model.fc = nn.Linear(in_features, out_features)
+    else:
+        model.classifier = nn.Linear(in_features, out_features)
     return model
 
 def get_optimizer(params, **kwargs):
