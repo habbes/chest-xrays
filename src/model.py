@@ -8,7 +8,7 @@ from dataset import LABELS
 from util import get_device
 
 def get_model(pretrained=True, finetune=False, arch="densenet"):
-    if arch == "resnet":
+    if arch == "densenet":
         model = models.resnet101(pretrained=pretrained)
     else:
         model = models.densenet121(pretrained=pretrained)
@@ -31,17 +31,18 @@ class Ensemble(nn.Module):
     """
     def __init__(self, models):
         super(Ensemble, self).__init__()
-        self.models = models
         for i, model in enumerate(models):
             self.add_module(f'model{i}', model)
     
     def forward(self, x):
         ens = None
+        num_modules = 0
         for model in self.modules():
+            num_modules += 1
             y = model(x)
             y = torch.sigmoid(y)
             ens = y if ens is None else torch.cat((ens, y), dim=-1)
-        ens = ens.view(-1, len(self.models), len(LABELS))
+        ens = ens.view(-1, num_modules, len(LABELS))
         ens = ens.mean(dim=1)
         return ens
 
