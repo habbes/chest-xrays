@@ -32,6 +32,8 @@ class Ensemble(nn.Module):
     def __init__(self, models):
         super(Ensemble, self).__init__()
         self.models = models
+        for model in self.models:
+            model.to(get_device())
     
     def forward(self, x):
         ens = None
