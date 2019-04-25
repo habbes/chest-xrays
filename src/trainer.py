@@ -130,7 +130,7 @@ def evaluate(model, dataloader, device, criterion=None):
             
 
 class Trainer():
-    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./models/model", value_for_uncertain=1.0):
+    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./models/model", uncertainty_strategy='best'):
         print("Training using options", "arch", arch, "finetune", finetune)
         self.output_path = output_path
         self.model = get_model(finetune=finetune, arch="densenet")
@@ -139,7 +139,7 @@ class Trainer():
         self.max_train_samples=max_train_samples
         self.criterion = nn.BCEWithLogitsLoss()
         self.dataloaders = {
-            "train": get_loader(get_dataset("train", value_for_uncertain=value_for_uncertain)),
+            "train": get_loader(get_dataset("train", uncertainty_strategy=uncertainty_strategy)),
             "val": get_loader(get_dataset("val"))
         }
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

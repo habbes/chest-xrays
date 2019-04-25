@@ -14,7 +14,7 @@ def run_baseline(
     max_train_samples=None,
     epochs=3,
     finetune=False,
-    value_for_uncertain=1.0
+    uncertainty_strategy='best'
     ):
 
     started = time.time()
@@ -29,7 +29,7 @@ def run_baseline(
             max_train_samples=max_train_samples,
             epochs=epochs,
             finetune=finetune,
-            value_for_uncertain=value_for_uncertain,
+            uncertainty_strategy=uncertainty_strategy,
             output_path=model_dir,
             arch="resnet"
         )

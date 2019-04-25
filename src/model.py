@@ -7,21 +7,38 @@ import os
 from dataset import LABELS
 from util import get_device
 
-def get_model(pretrained=True, finetune=False, arch="densenet"):
+def get_model(pretrained=True, finetune=False, arch="densenet", layers=18):
     if arch == "resnet":
-        model = models.resnet18(pretrained=pretrained)
+        return get_resnet_model(pretrained=pretrained, finetune=finetune, layers=layers)
     else:
-        model = models.densenet121(pretrained=pretrained)
+        return get_densenet_model(pretrained, finetune)
+
+def get_densenet_model(pretrained=True, finetune=False):
+    model = models.densenet121(pretrained=pretrained)
     if not finetune:
         for param in model.parameters():
             param.requires_grad = False
     in_features = model.classifier.in_features
     out_features = len(LABELS)
-    if arch == "resnet":
-        model.fc = nn.Linear(in_features, out_features)
-    else:
-        model.classifier = nn.Linear(in_features, out_features)
+    model.classifier = nn.Linear(in_features, out_features)
     return model
+
+def get_resnet_model(pretrained=True, finetune=False, layers=18):
+    kwargs = { "pretrained": pretrained }
+    if layers == 18:
+        model = models.resnet18(**kwargs)
+    elif layers == 34:
+        model = models.resnet34(**kwargs)
+    elif layers == 50:
+        model = models.resnet50(**kwargs)
+    else:
+        raise f"Invalid Resnet type {layers}"
+    if not finetune:
+        for param in model.parameters():
+            param.requires_grad = False
+    in_features = model.cf.in_features
+    out_features = len(LABELS)
+    model.fc = nn.Linear(in_features, out_features)
 
 def get_optimizer(params, **kwargs):
     return optim.Adam(params, **kwargs)
