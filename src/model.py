@@ -32,12 +32,12 @@ class Ensemble(nn.Module):
     def __init__(self, models):
         super(Ensemble, self).__init__()
         self.models = models
-        for model in self.models:
-            model.to(get_device())
+        for i, model in enumerate(models):
+            self.add_module(f'model{i}', model)
     
     def forward(self, x):
         ens = None
-        for model in self.models:
+        for model in self.modules():
             y = model(x)
             y = torch.sigmoid(y)
             ens = y if ens is None else torch.cat((ens, y), dim=-1)
