@@ -1,10 +1,11 @@
-from dataset import LABELS, get_test_loader
-from trainer import get_model, load_ensemble_from_dirs
 import numpy as np
 import pandas as pd
 import torch
 import os
 import time
+
+from dataset import LABELS, get_test_loader
+from model import get_model, load_ensemble_from_dirs
 
 def predict(model, dataloader, device):
     model.eval()

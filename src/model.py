@@ -110,7 +110,8 @@ def load_models(model_dirs):
             if filename.endswith('.pth'):
                 model_path = os.path.join(directory, filename)
                 model = get_model()
-                model.load_state_dict(torch.load(model_path))
+                target_device = None if torch.cuda.is_available() else 'cpu'
+                model.load_state_dict(torch.load(model_path, map_location=target_device))
                 models.append(model)
     return models
 

@@ -1,5 +1,8 @@
-from predict import Predict
 import argparse
+import time
+
+from predict import Predict
+from util import display_elapsed_time
 
 
 if __name__ == '__main__':
@@ -13,6 +16,9 @@ if __name__ == '__main__':
         help="comma-separated list of dirs containing models to use for inference (default= ./models/baseline_ubest_fine/m1,./models/baseline_best_fine_m2)")
     args = parser.parse_args()
 
-    model = Predict(args.input_csv, model_dirs=args.model_dirs, output_csv=args.output_csv)
+    started = time.time()
+    model_dirs = args.model_dirs.split(',')
+    model = Predict(args.input_csv, model_dirs=model_dirs, output_csv=args.output_csv)
     model.predict()
     print("Done")
+    display_elapsed_time(started)
