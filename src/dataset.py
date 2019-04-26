@@ -11,7 +11,7 @@ from pyspark.sql.types import *
 import os.path as path
 
 spark = SparkSession.builder \
-    .appName("ner") \
+    .appName("Chexpert") \
     .master("local[4]") \
     .config("spark.driver.memory","11G") \
     .config("spark.driver.maxResultSize", "8G") \
@@ -39,7 +39,7 @@ def filter_by_side(df, side):
 
 class TrainingDataset(Dataset):
     def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None, image_paths=False):
-        self.df = add_side_to_df(pd.read_csv(csv_file))
+        self.df = add_side_to_df(spark.read.csv(csv_file, header=True))
         if side is not None:
             self.df = filter_by_side(self.df, side)
         self.data_dir = data_dir
@@ -78,7 +78,7 @@ class TrainingDataset(Dataset):
 
 class TestDataset(Dataset):
     def __init__(self, csv_file, transform=None, data_dir=None):
-        self.df = pd.read_csv(csv_file)
+        self.df = spark.read.csv(csv_file, header=True)
         self.transform = transform
         self.data_dir = data_dir
     
