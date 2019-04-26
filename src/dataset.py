@@ -54,6 +54,7 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = path.join(self.data_dir, self.df.collect()[idx]['Path'])
+        print(img_path)
         img = Image.open(img_path).convert('RGB')
         if self.uncertainty_strategy == 'best':
             labels = self._get_labels_with_best_uncertain_values(idx)
