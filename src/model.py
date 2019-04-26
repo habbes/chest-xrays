@@ -65,6 +65,12 @@ class Ensemble(nn.Module):
         for i, model in enumerate(models):
             self.add_module(f'model{i}', model)
     
+    def to(self, device):
+        new_self = super(Ensemble, self).to(device)
+        for model in self.children():
+            model.to(device)
+        return new_self
+    
     def forward(self, x):
         ens = None
         num_modules = 0
