@@ -5,7 +5,7 @@ import os
 import time
 
 def get_device():
-    torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def display_elapsed_time(time_started, msg="Elapsed"):
     elapsed = time.time() - time_started
