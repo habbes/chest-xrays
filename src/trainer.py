@@ -134,7 +134,7 @@ class Trainer():
         arch="resnet", layers=18, model=None,
         output_path="./models/model", uncertainty_strategy='best',
         side=None):
-        print("Training using options", "arch", arch, "finetune", finetune)
+        print("Training using options", "arch", arch, "finetune", finetune, "layers", layers)
         self.output_path = output_path
         self.side = side
         if model is None:

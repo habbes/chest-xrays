@@ -8,7 +8,7 @@ import copy
 from dataset import LABELS
 from util import get_device
 
-def get_model(pretrained=True, finetune=False, arch="resnet", layers=34):
+def get_model(pretrained=True, finetune=False, arch="resnet", layers=50):
     if arch == "resnet":
         return get_resnet_model(pretrained=pretrained, finetune=finetune, layers=layers)
     else:
