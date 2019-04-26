@@ -1,5 +1,5 @@
 from dataset import LABELS, get_test_loader
-from trainer import get_model
+from trainer import get_model, load_ensemble_from_dirs
 import numpy as np
 import pandas as pd
 import torch
@@ -43,11 +43,10 @@ def results_to_df(agg_results):
     return pd.DataFrame(rows, columns=['Study'] + LABELS)
 
 class Predict():
-    def __init__(self, input_csv, model_path='./model/model.pth', output_csv='./results/results.csv'):
-        model = get_model()
-        model.load_state_dict(torch.load(model_path))
-        self.model_path = model_path
+    def __init__(self, input_csv, model_dirs, output_csv='./results/results.csv'):
+        model = load_ensemble_from_dirs(model_dirs)
         self.model = model
+        self.model_dirs = model_dirs
         self.output_csv = output_csv
         self.input_csv = input_csv
         self.dataloader = get_test_loader(input_csv)
@@ -57,7 +56,7 @@ class Predict():
         self.result_df = None
     
     def predict(self):
-        print(f"Running predictions on dataset '{self.input_csv}' using model '{self.model_path}'...")
+        print(f"Running predictions on dataset '{self.input_csv}' using models '{self.model_dirs}'...")
         started = time.time()
         self.raw_results = predict(self.model, self.dataloader, self.device)
         duration = time.time() - started
