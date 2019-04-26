@@ -53,7 +53,7 @@ class TrainingDataset(Dataset):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
-        img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
+        img_path = path.join(self.data_dir, self.df.collect()[idx]['Path'])
         img = Image.open(img_path).convert('RGB')
         if self.uncertainty_strategy == 'best':
             labels = self._get_labels_with_best_uncertain_values(idx)
