@@ -16,8 +16,8 @@ from model import get_model, get_optimizer, load_ensemble_from_checkpoints
 from util import CheckpointManager, display_elapsed_time
 
 RESULTS_DIR = './results'
-CHECKPOINT_COUNT = 1#2000
-CHECKPOINTS_PER_RUN = 2#3
+CHECKPOINT_COUNT = 2000
+CHECKPOINTS_PER_RUN = 3
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()

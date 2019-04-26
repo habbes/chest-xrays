@@ -58,7 +58,7 @@ def run_baseline(
 def run_multiside(
     output_dir
     ):
-    max_batches=1
+    max_batches=None
     started = time.time()
     sides = ['frontal', 'lateral']
     base_dir = os.path.join(output_dir, 'base')
