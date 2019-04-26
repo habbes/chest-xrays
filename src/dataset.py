@@ -50,10 +50,10 @@ class TrainingDataset(Dataset):
         self.image_paths = image_paths
     
     def __len__(self):
-        return int(len(self.df.columns))
+        return len(self.df.columns)
 
     def __getitem__(self, idx):
-        img_path = path.join(self.data_dir, self.df.collect()[idx]['Path'])
+        img_path = path.join(self.data_dir, self.df.collect()[int(idx)]['Path'])
         print(img_path)
         img = Image.open(img_path).convert('RGB')
         if self.uncertainty_strategy == 'best':
