@@ -17,9 +17,18 @@ BATCH_SIZE = 8
 def data_path(file_path):
     return path.join(DATA_DIR, file_path)
 
+def add_side_to_df(df):
+    df['side'] = df['Path'].apply(lambda p: 'lateral' if 'lateral' in p else 'frontal')
+    return df
+
+def filter_by_side(df, side):
+    return df.query(f"side=='{side}'")
+
 class TrainingDataset(Dataset):
-    def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best'):
-        self.df = pd.read_csv(csv_file)
+    def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None):
+        self.df = add_side_to_df(pd.read_csv(csv_file))
+        if side is not None:
+            self.df = filter_by_side(self.df, side)
         self.data_dir = data_dir
         self.transform = transform
         self.uncertainty_strategy = uncertainty_strategy
@@ -76,18 +85,18 @@ def get_transformer():
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-def get_dataset(train_or_val, uncertainty_strategy='best'):
+def get_dataset(train_or_val, uncertainty_strategy='best', side=None):
     csv_file = TRAIN_CSV if train_or_val == "train" else VALID_CSV
-    return TrainingDataset(csv_file, DATA_DIR, get_transformer(), uncertainty_strategy=uncertainty_strategy)
+    return TrainingDataset(csv_file, DATA_DIR, get_transformer(), uncertainty_strategy=uncertainty_strategy, side=side)
 
 def get_loader(dataset, shuffle=True):
     return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=4)
 
-def get_train_loader(uncertainty_strategy='best'):
-    return get_loader((get_dataset('train'), uncertainty_strategy))
+def get_train_loader(uncertainty_strategy='best', side=None):
+    return get_loader(get_dataset('train', uncertainty_strategy=uncertainty_strategy, side=side))
 
-def get_val_loader():
-    return get_loader((get_dataset('val')), shuffle=False)
+def get_val_loader(side=None):
+    return get_loader(get_dataset('val', side=side), shuffle=False)
 
 def get_test_dataset(csv_file, data_dir=None):
     return TestDataset(csv_file, get_transformer(), data_dir=data_dir)
