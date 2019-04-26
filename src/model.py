@@ -3,11 +3,12 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
 import os
+import copy
 
 from dataset import LABELS
 from util import get_device
 
-def get_model(pretrained=True, finetune=False, arch="densenet", layers=18):
+def get_model(pretrained=True, finetune=False, arch="resnet", layers=34):
     if arch == "resnet":
         return get_resnet_model(pretrained=pretrained, finetune=finetune, layers=layers)
     else:
@@ -36,9 +37,19 @@ def get_resnet_model(pretrained=True, finetune=False, layers=18):
     if not finetune:
         for param in model.parameters():
             param.requires_grad = False
-    in_features = model.cf.in_features
+    in_features = model.fc.in_features
     out_features = len(LABELS)
     model.fc = nn.Linear(in_features, out_features)
+    return model
+
+def get_feature_extractor(model):
+    new_model = copy.deepcopy(model)
+    for param in new_model.parameters():
+        param.requires_grad = False
+    in_features = new_model.fc.in_features
+    out_features = len(LABELS)
+    new_model.fc = nn.Linear(in_features, out_features)
+    return new_model
 
 def get_optimizer(params, **kwargs):
     return optim.Adam(params, **kwargs)
@@ -57,7 +68,7 @@ class Ensemble(nn.Module):
     def forward(self, x):
         ens = None
         num_modules = 0
-        for model in self.modules():
+        for model in self.children():
             num_modules += 1
             y = model(x)
             y = torch.sigmoid(y)
@@ -65,6 +76,22 @@ class Ensemble(nn.Module):
         ens = ens.view(-1, num_modules, len(LABELS))
         ens = ens.mean(dim=1)
         return ens
+
+class MultiSide(nn.Module):
+    """
+    combination of frontal and lateral models,
+    the correct one is used based on the image type
+    """
+    def __init__(self, frontal, lateral):
+        super(MultiSide, self).__init__()
+        self.add_module('frontal', frontal)
+        self.add_module('lateral', lateral)
+    
+    def forward(self, x, image_path):
+        model = self.lateral if 'lateral' in image_path else self.frontal
+        return model(x)
+    
+
 
 
 def load_models(model_dirs):

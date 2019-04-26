@@ -16,7 +16,7 @@ from model import get_model, get_optimizer, load_ensemble_from_checkpoints
 from util import CheckpointManager, display_elapsed_time
 
 RESULTS_DIR = './results'
-CHECKPOINT_COUNT = 2000
+CHECKPOINT_COUNT = 1#2000
 CHECKPOINTS_PER_RUN = 3
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
@@ -130,17 +130,24 @@ def evaluate(model, dataloader, device, criterion=None):
             
 
 class Trainer():
-    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3, arch="densenet", output_path="./models/model", uncertainty_strategy='best'):
+    def __init__(self, finetune=False, max_train_samples=None, lr=0.0001, epochs=3,
+        arch="resnet", layers=18, model=None,
+        output_path="./models/model", uncertainty_strategy='best',
+        side=None):
         print("Training using options", "arch", arch, "finetune", finetune)
         self.output_path = output_path
-        self.model = get_model(finetune=finetune, arch="densenet")
-        params = self.model.parameters() if finetune else self.model.classifier.parameters()
+        self.side = side
+        if model is None:
+            self.model = get_model(finetune=finetune, arch="resnet", layers=layers)
+        else:
+            self.model = model
+        params = self.model.parameters() if finetune else self.model.fc.parameters()
         self.optimizer = optim.Adam(params, lr=lr)
         self.max_train_samples=max_train_samples
         self.criterion = nn.BCEWithLogitsLoss()
         self.dataloaders = {
-            "train": get_loader(get_dataset("train", uncertainty_strategy=uncertainty_strategy)),
-            "val": get_loader(get_dataset("val"))
+            "train": get_loader(get_dataset("train", uncertainty_strategy=uncertainty_strategy, side=side)),
+            "val": get_loader(get_dataset("val", side=side))
         }
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
