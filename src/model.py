@@ -66,8 +66,10 @@ class Ensemble(nn.Module):
             self.add_module(f'model{i}', model)
     
     def to(self, device):
+        print("MOVING TO DEVICE", device)
         new_self = super(Ensemble, self).to(device)
         for model in self.children():
+            print("MOVING CHILD TO DEVICE")
             model.to(device)
         return new_self
     
