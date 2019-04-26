@@ -60,6 +60,7 @@ class TrainingDataset(Dataset):
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
             labels = self.df.collect()[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, value_for_uncertain).values
+            print(labels)
         labels = torch.from_numpy(labels)
         if self.transform:
             img = self.transform(img)
