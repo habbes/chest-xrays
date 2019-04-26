@@ -7,6 +7,7 @@ from PIL import Image
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
+from pyspark.sql.functions import udf
 
 import os.path as path
 
@@ -31,7 +32,8 @@ def data_path(file_path):
     return path.join(DATA_DIR, file_path)
 
 def add_side_to_df(df):
-    df['side'] = df['Path'].apply(lambda p: 'lateral' if 'lateral' in p else 'frontal')
+    side_udf = udf(lambda p: 'lateral' if 'lateral' in p else 'frontal')
+    df.withColumn('side', (side_udf(df['Path'])))
     return df
 
 def filter_by_side(df, side):
@@ -49,7 +51,7 @@ class TrainingDataset(Dataset):
     
     def __len__(self):
         return len(self.df)
-    
+
     def __getitem__(self, idx):
         img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
         img = Image.open(img_path).convert('RGB')
