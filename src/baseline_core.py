@@ -3,10 +3,10 @@ import os
 import time
 import sklearn.metrics as mt
 
-from trainer import Trainer, plot_roc_auc, evaluate
+from trainer import Trainer, plot_roc_auc, evaluate, evaluate_multiside
 from model import load_ensemble_from_dirs, get_model, get_feature_extractor, MultiSide
 from util import get_device, display_elapsed_time
-from dataset import get_val_loader
+from dataset import get_val_loader, get_val_loader_for_multiside
 
 def run_baseline(
     output_dir,
@@ -58,7 +58,7 @@ def run_baseline(
 def run_multiside(
     output_dir
     ):
-    max_batches=None
+    max_batches=1
     started = time.time()
     sides = ['frontal', 'lateral']
     base_dir = os.path.join(output_dir, 'base')
@@ -67,7 +67,7 @@ def run_multiside(
         epochs=1,
         finetune=True,
         uncertainty_strategy='best',
-        output_dir=base_dir,
+        output_path=base_dir,
         arch="resnet"
     )
     print("Training base model")
@@ -91,7 +91,7 @@ def run_multiside(
         model=get_feature_extractor(base_model),
         uncertainty_strategy='best',
         side='frontal',
-        output_dir=frontal_dir
+        output_path=frontal_dir
     )
     frontal_trainer.train()
     y_true, y_pred = frontal_trainer.evaluate()
@@ -107,7 +107,7 @@ def run_multiside(
         model=get_feature_extractor(base_model),
         uncertainty_strategy='best',
         side='lateral',
-        output_dir=frontal_dir
+        output_path=lateral_dir
     )
     lateral_trainer.train()
     y_true, y_pred = lateral_trainer.evaluate()
@@ -119,4 +119,12 @@ def run_multiside(
     lateral = load_ensemble_from_dirs([lateral_dir])
 
     multiside = MultiSide(frontal=frontal, lateral=lateral)
+    multiside.to(get_device())
     
+    results = evaluate_multiside(multiside, get_val_loader_for_multiside(), get_device())
+    labels = results['labels']
+    preds = results['predictions']
+    final_auc = mt.roc_auc_score(labels, preds)
+    print("Ensemble Validation AUC", final_auc)
+    plot_roc_auc(labels, preds, save_to_file=True, output_path=output_dir)
+    display_elapsed_time(started, "Total time taken")

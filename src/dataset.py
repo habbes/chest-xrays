@@ -25,13 +25,14 @@ def filter_by_side(df, side):
     return df.query(f"side=='{side}'")
 
 class TrainingDataset(Dataset):
-    def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None):
+    def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None, image_paths=False):
         self.df = add_side_to_df(pd.read_csv(csv_file))
         if side is not None:
             self.df = filter_by_side(self.df, side)
         self.data_dir = data_dir
         self.transform = transform
         self.uncertainty_strategy = uncertainty_strategy
+        self.image_paths = image_paths
     
     def __len__(self):
         return len(self.df)
@@ -47,7 +48,10 @@ class TrainingDataset(Dataset):
         labels = torch.from_numpy(labels)
         if self.transform:
             img = self.transform(img)
-        return img, labels
+        if self.image_paths:
+            return img, labels, img_path
+        else:
+            return img, labels
     
     def _get_labels_with_best_uncertain_values(self, idx):
         labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
@@ -89,8 +93,8 @@ def get_dataset(train_or_val, uncertainty_strategy='best', side=None):
     csv_file = TRAIN_CSV if train_or_val == "train" else VALID_CSV
     return TrainingDataset(csv_file, DATA_DIR, get_transformer(), uncertainty_strategy=uncertainty_strategy, side=side)
 
-def get_loader(dataset, shuffle=True):
-    return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=4)
+def get_loader(dataset, shuffle=True, batch_size=BATCH_SIZE):
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=4)
 
 def get_train_loader(uncertainty_strategy='best', side=None):
     return get_loader(get_dataset('train', uncertainty_strategy=uncertainty_strategy, side=side))
@@ -103,4 +107,10 @@ def get_test_dataset(csv_file, data_dir=None):
 
 def get_test_loader(csv_file, data_dir=None):
     return get_loader(get_test_dataset(csv_file, data_dir=data_dir), shuffle=False)
+
+def get_val_loader_for_multiside():
+    return get_loader(
+        TrainingDataset(VALID_CSV, DATA_DIR, get_transformer(), image_paths=True),
+        shuffle=False, batch_size=1
+    )
 

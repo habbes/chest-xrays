@@ -87,8 +87,8 @@ class MultiSide(nn.Module):
         self.add_module('frontal', frontal)
         self.add_module('lateral', lateral)
     
-    def forward(self, x, image_path):
-        model = self.lateral if 'lateral' in image_path else self.frontal
+    def forward(self, x, image_paths):
+        model = self.lateral if 'lateral' in image_paths[0] else self.frontal
         return model(x)
     
 

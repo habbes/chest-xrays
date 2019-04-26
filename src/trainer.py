@@ -16,8 +16,8 @@ from model import get_model, get_optimizer, load_ensemble_from_checkpoints
 from util import CheckpointManager, display_elapsed_time
 
 RESULTS_DIR = './results'
-CHECKPOINT_COUNT = 2000
-CHECKPOINTS_PER_RUN = 3
+CHECKPOINT_COUNT = 1#2000
+CHECKPOINTS_PER_RUN = 2#3
 
 def train_model(model, dataloaders, criterion, optimizer, device, num_epochs=3, max_samples=None):
     since = time.time()
@@ -108,6 +108,36 @@ def evaluate(model, dataloader, device, criterion=None):
         labels = labels.to(device)
         with torch.set_grad_enabled(False):
             outputs = model(inputs)
+            preds = torch.sigmoid(outputs)
+            if criterion is not None:
+                loss = criterion(outputs, labels)
+                running_loss += loss.item() * inputs.size(0)
+        np_preds = preds.detach().cpu().numpy()
+        np_labels = labels.data.cpu().numpy()
+        if all_preds is None:
+            all_preds = np_preds
+            all_labels = np_labels
+        else:
+            all_preds = np.vstack((all_preds, np_preds))
+            all_labels = np.vstack((all_labels, np_labels))
+    
+    epoch_loss = None if criterion is None else running_loss / len(dataloader.dataset)
+    return {
+        "labels": all_labels,
+        "predictions": all_preds,
+        "loss": epoch_loss
+    }
+
+def evaluate_multiside(model, dataloader, device, criterion=None):
+    model.eval()
+    running_loss = 0.0
+    all_preds = None
+    all_labels = None
+    for inputs, labels, image_path in dataloader:
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs, image_path)
             preds = torch.sigmoid(outputs)
             if criterion is not None:
                 loss = criterion(outputs, labels)
