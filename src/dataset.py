@@ -50,7 +50,7 @@ class TrainingDataset(Dataset):
         self.image_paths = image_paths
     
     def __len__(self):
-        return len(self.df)
+        return len(self.df.columns)
 
     def __getitem__(self, idx):
         img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
