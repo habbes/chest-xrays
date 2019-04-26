@@ -32,7 +32,7 @@ def run_baseline(
             uncertainty_strategy=uncertainty_strategy,
             output_path=model_dir,
             arch="resnet",
-            layers=50
+            layers=18
         )
         trainer.train()
         y_true, y_pred = trainer.evaluate()
