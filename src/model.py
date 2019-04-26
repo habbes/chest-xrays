@@ -51,6 +51,10 @@ def get_feature_extractor(model):
     new_model.fc = nn.Linear(in_features, out_features)
     return new_model
 
+def get_clone(model):
+    new_model = copy.deepcopy(model)
+    return new_model
+
 def get_optimizer(params, **kwargs):
     return optim.Adam(params, **kwargs)
 

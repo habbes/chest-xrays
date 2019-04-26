@@ -4,7 +4,7 @@ import time
 import sklearn.metrics as mt
 
 from trainer import Trainer, plot_roc_auc, evaluate, evaluate_multiside
-from model import load_ensemble_from_dirs, get_model, get_feature_extractor, MultiSide
+from model import load_ensemble_from_dirs, get_model, get_feature_extractor, get_clone, MultiSide
 from util import get_device, display_elapsed_time
 from dataset import get_val_loader, get_val_loader_for_multiside
 
@@ -88,7 +88,7 @@ def run_multiside(
     frontal_trainer = Trainer(
         max_train_samples=max_batches,
         epochs=2,
-        model=get_feature_extractor(base_model),
+        model=get_clone(base_model),
         uncertainty_strategy='best',
         side='frontal',
         output_path=frontal_dir
@@ -104,7 +104,7 @@ def run_multiside(
     lateral_trainer = Trainer(
         max_train_samples=max_batches,
         epochs=2,
-        model=get_feature_extractor(base_model),
+        model=get_clone(base_model),
         uncertainty_strategy='best',
         side='lateral',
         output_path=lateral_dir
@@ -112,7 +112,7 @@ def run_multiside(
     lateral_trainer.train()
     y_true, y_pred = lateral_trainer.evaluate()
     plot_roc_auc(y_true, y_pred, save_to_file=True, output_path=lateral_dir)
-    print("=== Completed training frontal model", lateral_dir, "===")
+    print("=== Completed training lateral model", lateral_dir, "===")
     print()
 
     frontal = load_ensemble_from_dirs([frontal_dir])
