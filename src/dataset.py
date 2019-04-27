@@ -53,14 +53,14 @@ class TrainingDataset(Dataset):
 
         if self.uncertainty_strategy == 'best':
             for colName in LABELS:
-                self.df.withColumn(colName, col(colName).cast("float")).replace(np.NaN, 0.0)
+                self.df.withColumn(colName, col(colName).cast("float")).df2.fillna(0.0)
         self.df.show()
     
     def __len__(self):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
-        
+
         df_list = self.df.collect()
         df_list.show()
         #sub_path = df_list[idx]['Path']
