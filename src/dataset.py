@@ -60,11 +60,12 @@ class TrainingDataset(Dataset):
                 if colName in ones_labels:
                     self.df.withColumn(colName, when(col(colName).equalTo(-1.0),1.0).otherwise(col(colName)))
                 elif colName in zeros_labels:
-                    self.df.withColumn(colName, col(colName).replace(-1.0, 0.0))
+                    self.df.withColumn(colName, when(col(colName).equalTo(-1.0),0.0).otherwise(col(colName)))
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
             for colName in LABELS:
-                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0).replace(-1.0, value_for_uncertain)
+                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                self.df.withColumn(colName, when(col(colName).equalTo(-1.0),value_for_uncertain).otherwise(col(colName)))
         print('inside training')
         self.df.show()
     
