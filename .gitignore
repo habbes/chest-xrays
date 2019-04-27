@@ -7,3 +7,5 @@ __pycache__
 results/*
 !results/.gitkeep
 *.log
+models/*
+!models/.gitkeep

@@ -142,4 +142,3 @@ def get_val_loader_for_multiside():
         TrainingDataset(VALID_CSV, DATA_DIR, get_transformer(), image_paths=True),
         shuffle=False, batch_size=1
     )
-
