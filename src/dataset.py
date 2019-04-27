@@ -67,6 +67,8 @@ class TrainingDataset(Dataset):
                 self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
                 self.df.withColumn(colName, when(self.df[colName] == -1.0,value_for_uncertain).otherwise(self.df[colName]))
         print('inside training')
+        pandas_df = self.df.toPandas()
+        print('pandas:' + pandas_df)
         self.df.show()
     
     def __len__(self):
