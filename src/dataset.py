@@ -51,7 +51,8 @@ class TrainingDataset(Dataset):
         self.image_paths = image_paths
 
         if self.uncertainty_strategy == 'best':
-            self.df[LABELS].cast('float').replace(np.NaN, 0.0)
+            for colName in LABELS:
+                self.df.select(colName).cast("float").replace(np.NaN, 0.0)
         self.df.show()
     
     def __len__(self):
