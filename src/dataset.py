@@ -44,9 +44,9 @@ def filter_by_side(df, side):
 
 class TrainingDataset(Dataset):
     def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None, image_paths=False):
-        self.df = add_side_to_df(spark.read.csv(csv_file, header=True))
+        self.spark_df = add_side_to_df(spark.read.csv(csv_file, header=True))
         if side is not None:
-            self.df = filter_by_side(self.df, side)
+            self.spark_df = filter_by_side(self.spark_df, side)
         self.data_dir = data_dir
         self.transform = transform
         self.uncertainty_strategy = uncertainty_strategy
@@ -56,20 +56,19 @@ class TrainingDataset(Dataset):
             ones_labels = ['Atelectasis', 'Edema']
             zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
             for colName in LABELS:
-                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
                 if colName in ones_labels:
-                    self.df.withColumn(colName, when(self.df[colName] == -1.0, 1.0).otherwise(self.df[colName]))
+                    self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 1.0).otherwise(self.spark_df[colName]))
                 elif colName in zeros_labels:
-                    self.df.withColumn(colName, when(self.df[colName] == -1.0, 0.0).otherwise(self.df[colName]))
+                    self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 0.0).otherwise(self.spark_df[colName]))
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
             for colName in LABELS:
-                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
-                self.df.withColumn(colName, when(self.df[colName] == -1.0,value_for_uncertain).otherwise(self.df[colName]))
+                self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0,value_for_uncertain).otherwise(self.spark_df[colName]))
         print('inside training')
-        pandas_df = self.df.toPandas()
-        print('pandas:' + pandas_df)
-        self.df.show()
+        self.df = self.spark_df.toPandas()
+        print('pandas:' + self.df)
     
     def __len__(self):
         return len(self.df.columns)
