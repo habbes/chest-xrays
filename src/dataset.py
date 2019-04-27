@@ -94,7 +94,7 @@ class TrainingDataset(Dataset):
 
 class TestDataset(Dataset):
     def __init__(self, csv_file, transform=None, data_dir=None):
-        self.df = spark.read.csv(csv_file, header=True)
+        self.df = pd.read_csv(csv_file)
         self.transform = transform
         self.data_dir = data_dir
     
