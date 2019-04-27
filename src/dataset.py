@@ -54,7 +54,7 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
         self.df.show()
-        df_list = self.df.collect()
+        df_list = self.df.toPandas()
         sub_path = df_list[idx]['Path']
         img_path = path.join(self.data_dir, sub_path)
         img = Image.open(img_path).convert('RGB')
