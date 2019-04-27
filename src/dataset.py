@@ -56,16 +56,16 @@ class TrainingDataset(Dataset):
             ones_labels = ['Atelectasis', 'Edema']
             zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
             for colName in LABELS:
-                self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                self.spark_df = self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
                 if colName in ones_labels:
-                    self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 1.0).otherwise(self.spark_df[colName]))
+                    self.spark_df = self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 1.0).otherwise(self.spark_df[colName]))
                 elif colName in zeros_labels:
-                    self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 0.0).otherwise(self.spark_df[colName]))
+                    self.spark_df = self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0, 0.0).otherwise(self.spark_df[colName]))
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
             for colName in LABELS:
-                self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
-                self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0,value_for_uncertain).otherwise(self.spark_df[colName]))
+                self.spark_df = self.spark_df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                self.spark_df = self.spark_df.withColumn(colName, when(self.spark_df[colName] == -1.0,value_for_uncertain).otherwise(self.spark_df[colName]))
         print('inside training')
         print(self.spark_df.count())
         self.df = self.spark_df.toPandas()
