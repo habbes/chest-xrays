@@ -49,6 +49,10 @@ class TrainingDataset(Dataset):
         self.transform = transform
         self.uncertainty_strategy = uncertainty_strategy
         self.image_paths = image_paths
+
+        if self.uncertainty_strategy == 'best':
+            self.df[LABELS].astype(np.float32).replace(np.NaN, 0.0)
+        self.df.show()
     
     def __len__(self):
         return len(self.df.columns)
