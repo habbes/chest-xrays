@@ -54,8 +54,9 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
         self.df.show()
-        df_list = self.df.toPandas()
+        df_list = self.df.collect()
         sub_path = df_list[idx]['Path']
+        print(sub_path)
         img_path = path.join(self.data_dir, sub_path)
         img = Image.open(img_path).convert('RGB')
         if self.uncertainty_strategy == 'best':
