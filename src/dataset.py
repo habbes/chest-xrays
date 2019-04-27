@@ -54,6 +54,7 @@ class TrainingDataset(Dataset):
         if self.uncertainty_strategy == 'best':
             for colName in LABELS:
                 self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+        print('inside training')
         self.df.show()
     
     def __len__(self):
@@ -83,7 +84,6 @@ class TrainingDataset(Dataset):
             return img, labels
     
     def _get_labels_with_best_uncertain_values(self, idx):
-        self.df.show()
         df_list = self.df.collect()
         labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
         ones_labels = ['Atelectasis', 'Edema']
