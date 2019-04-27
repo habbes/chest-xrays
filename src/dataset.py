@@ -53,9 +53,9 @@ class TrainingDataset(Dataset):
 
     #if self.uncertainty_strategy == 'best':
         for colName in LABELS:
-            self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+            self.df.withColumn(colName, col(colName).cast("float"))
         print('inside training')
-        self.df.show().take(5)
+        self.df.show()
     
     def __len__(self):
         return len(self.df.columns)
