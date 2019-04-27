@@ -54,7 +54,7 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
         self.df.show()
-        sub_path = self.df.collect()
+        sub_path = self.df.select("Path").take(idx)
         print(sub_path)
         img_path = path.join(self.data_dir, sub_path[idx]['Path'])
         print(img_path)
