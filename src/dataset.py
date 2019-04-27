@@ -72,7 +72,7 @@ class TrainingDataset(Dataset):
         print('pandas:' + self.df)
     
     def __len__(self):
-        return len(self.df.columns)
+        return len(self.df)
 
     def __getitem__(self, idx):
 
