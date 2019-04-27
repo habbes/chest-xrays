@@ -76,16 +76,10 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        df_list = self.df.collect()
-        df_list.show()
-        #sub_path = df_list[idx]['Path']
-        sub_path=''
-        print(sub_path)
-        img_path = path.join(self.data_dir, sub_path)
+        img_path = path.join(self.data_dir, self.df.iloc[idx]['Path'])
         img = Image.open(img_path).convert('RGB')
-        df_list = self.df.collect()
 
-        labels = df_list[idx][LABELS]
+        labels = self.df.iloc[idx][LABELS]
         labels = labels.values
         labels = torch.from_numpy(labels)
         print(labels)
