@@ -58,9 +58,9 @@ class TrainingDataset(Dataset):
             for colName in LABELS:
                 self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
                 if colName in ones_labels:
-                    self.df.withColumn(colName, when(col(colName).equalTo(-1.0),1.0).otherwise(col(colName)))
+                    self.df.withColumn(colName, when(self.df[colName].equalTo(-1.0), 1.0).otherwise(self.df[colName]))
                 elif colName in zeros_labels:
-                    self.df.withColumn(colName, when(col(colName).equalTo(-1.0),0.0).otherwise(col(colName)))
+                    self.df.withColumn(colName, when(col(colName).equalTo(-1.0), 0.0).otherwise(col(colName)))
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
             for colName in LABELS:
