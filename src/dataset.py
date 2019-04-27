@@ -55,7 +55,7 @@ class TrainingDataset(Dataset):
         for colName in LABELS:
             self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
         print('inside training')
-        self.df.show()
+        self.df.show().take(5)
     
     def __len__(self):
         return len(self.df.columns)
