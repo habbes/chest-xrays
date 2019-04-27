@@ -51,9 +51,9 @@ class TrainingDataset(Dataset):
         self.uncertainty_strategy = uncertainty_strategy
         self.image_paths = image_paths
 
-        if self.uncertainty_strategy == 'best':
-            for colName in LABELS:
-                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+    #if self.uncertainty_strategy == 'best':
+        for colName in LABELS:
+            self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
         print('inside training')
         self.df.show()
     
