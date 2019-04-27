@@ -51,9 +51,19 @@ class TrainingDataset(Dataset):
         self.uncertainty_strategy = uncertainty_strategy
         self.image_paths = image_paths
 
-    #if self.uncertainty_strategy == 'best':
-        for colName in LABELS:
-            self.df.withColumn(colName, col(colName).cast("float"))
+        if self.uncertainty_strategy == 'best':
+            ones_labels = ['Atelectasis', 'Edema']
+            zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
+            for colName in LABELS:
+                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0)
+                if colName in ones_labels:
+                    self.df.withColumn(colName, col(colName).replace(-1.0, 1.0))
+                elif colName in zeros_labels:
+                    self.df.withColumn(colName, col(colName).replace(-1.0, 0.0))
+        else:
+            value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
+            for colName in LABELS:
+                self.df.withColumn(colName, col(colName).cast("float")).fillna(0.0).replace(-1.0, value_for_uncertain)
         print('inside training')
         self.df.show()
     
@@ -69,29 +79,18 @@ class TrainingDataset(Dataset):
         print(sub_path)
         img_path = path.join(self.data_dir, sub_path)
         img = Image.open(img_path).convert('RGB')
-        if self.uncertainty_strategy == 'best':
-            labels = self._get_labels_with_best_uncertain_values(idx)
-        else:
-            value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
-            labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, value_for_uncertain).values
-            print(labels)
+        df_list = self.df.collect()
+
+        labels = df_list[idx][LABELS]
+        labels = labels.values
         labels = torch.from_numpy(labels)
+        print(labels)
         if self.transform:
             img = self.transform(img)
         if self.image_paths:
             return img, labels, img_path
         else:
             return img, labels
-    
-    def _get_labels_with_best_uncertain_values(self, idx):
-        df_list = self.df.collect()
-        labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
-        ones_labels = ['Atelectasis', 'Edema']
-        zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
-        labels[ones_labels] = labels[ones_labels].replace(-1.0, 1.0)
-        labels[zeros_labels] = labels[zeros_labels].replace(-1.0, 0.0)
-        labels = labels.values
-        return labels
 
 
 class TestDataset(Dataset):
