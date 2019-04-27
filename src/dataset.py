@@ -27,6 +27,7 @@ VALID_CSV = './data/CheXpert-v1.0-small/valid.csv'
 
 LABELS = ['Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Pleural Effusion']
 BATCH_SIZE = 8
+spark.conf.set("spark.sql.execution.arrow.enabled", "true")
 
 def data_path(file_path):
     return path.join(DATA_DIR, file_path)
@@ -54,7 +55,7 @@ class TrainingDataset(Dataset):
 
     def __getitem__(self, idx):
         self.df.show()
-        df_list = self.df.collect()
+        df_list = self.df.toPandas()
         sub_path = df_list[idx]['Path']
         print(sub_path)
         img_path = path.join(self.data_dir, sub_path)
