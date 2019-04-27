@@ -72,7 +72,7 @@ class TrainingDataset(Dataset):
             return img, labels
     
     def _get_labels_with_best_uncertain_values(self, idx):
-        labels = self.df.iloc[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
+        labels = self.df.collect()[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
         ones_labels = ['Atelectasis', 'Edema']
         zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
         labels[ones_labels] = labels[ones_labels].replace(-1.0, 1.0)
