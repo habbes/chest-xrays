@@ -60,7 +60,7 @@ class TrainingDataset(Dataset):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
-        self.df.show()
+        
         df_list = self.df.collect()
         df_list.show()
         #sub_path = df_list[idx]['Path']
