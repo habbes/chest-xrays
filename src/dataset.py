@@ -53,18 +53,15 @@ class TrainingDataset(Dataset):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
-        self.df.show()
-        vs = self.df.collect()
-        sub_path = vs[idx]['Path']
-        print(sub_path)
+        df_list = self.df.collect()
+        sub_path = df_list[idx]['Path']
         img_path = path.join(self.data_dir, sub_path)
-        print(img_path)
         img = Image.open(img_path).convert('RGB')
         if self.uncertainty_strategy == 'best':
             labels = self._get_labels_with_best_uncertain_values(idx)
         else:
             value_for_uncertain = 1.0 if self.uncertainty_strategy == 'one' else 0.0
-            labels = self.df.collect()[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, value_for_uncertain).values
+            labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0).replace(-1.0, value_for_uncertain).values
             print(labels)
         labels = torch.from_numpy(labels)
         if self.transform:
@@ -75,7 +72,8 @@ class TrainingDataset(Dataset):
             return img, labels
     
     def _get_labels_with_best_uncertain_values(self, idx):
-        labels = self.df.collect()[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
+        df_list = self.df.collect()
+        labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
         ones_labels = ['Atelectasis', 'Edema']
         zeros_labels = ['Cardiomegaly', 'Consolidation', 'Pleural Effusion']
         labels[ones_labels] = labels[ones_labels].replace(-1.0, 1.0)
