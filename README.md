@@ -23,6 +23,17 @@ into the `data` folder of this repository then running:
 ln -s  /data/chexpert/CheXpert-v1.0-small CheXpert-v1.0-small
 ```
 
+To setup the environment, use conda to create the environment. Inside the project folder run following command:
+
+```
+conda env create -f environment.yml
+```
+Before running code, you will be required to activate conda environment:
+
+```
+conda activate pyspark_env
+```
+
 ## Training the model
 
 You can train the model by running the `start.py` script:
