@@ -53,6 +53,7 @@ class TrainingDataset(Dataset):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
+        self.df.show()
         sub_path = self.df.collect()
         print(sub_path)
         img_path = path.join(self.data_dir, sub_path[idx]['Path'])
