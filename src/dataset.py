@@ -9,6 +9,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import udf
 from pyspark.sql.functions import col , column
+from pyspark.sql.functions import when
 
 import os.path as path
 
