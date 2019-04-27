@@ -22,7 +22,7 @@ def add_side_to_df(df):
     return df
 
 def filter_by_side(df, side):
-    return df.query(f"side=='{side}'")
+    return df.query("side=='%s'" % side)
 
 class TrainingDataset(Dataset):
     def __init__(self, csv_file, data_dir, transform=None, uncertainty_strategy='best', side=None, image_paths=False):

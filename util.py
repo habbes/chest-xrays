@@ -32,7 +32,7 @@ class CheckpointManager():
         stats_df = pd.DataFrame(self.stats)
         stats_df.to_csv(os.path.join(output_dir, 'stats.csv'))
         for i, chk in enumerate(self.checkpoints):
-            torch.save(chk["model"], os.path.join(output_dir, f"checkpoint_{i}.pth"))
+            torch.save(chk["model"], os.path.join(output_dir, "checkpoint_{}.pth".format(i)))
     
     def _add_model(self, model, val_auc):
         if not self._should_add(val_auc):

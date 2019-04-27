@@ -33,7 +33,7 @@ def get_resnet_model(pretrained=True, finetune=False, layers=18):
     elif layers == 50:
         model = models.resnet50(**kwargs)
     else:
-        raise f"Invalid Resnet type {layers}"
+        raise "Invalid Resnet type {}".format(layers)
     if not finetune:
         for param in model.parameters():
             param.requires_grad = False

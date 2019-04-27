@@ -57,16 +57,16 @@ class Predict():
         self.result_df = None
     
     def predict(self):
-        print(f"Running predictions on dataset '{self.input_csv}' using models '{self.model_dirs}'...")
+        print("Running predictions on dataset '{}' using models '{}'...".format(self.input_csv, self.model_dirs))
         started = time.time()
         self.raw_results = predict(self.model, self.dataloader, self.device)
         duration = time.time() - started
-        print(f"Prediction completed in {duration}s")
+        print("Prediction completed in {}s".format(duration))
         print("Collecting results...")
         aggregated = aggregate_studies(*self.raw_results)
         self.result_df = results_to_df(aggregated)
         self.result_df.to_csv(self.output_csv, index=False)
-        print(f"Results saved to {self.output_csv}")
+        print("Results saved to {}".format(self.output_csv))
         return self.result_df
 
         
