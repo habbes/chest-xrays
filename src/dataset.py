@@ -70,7 +70,7 @@ class TrainingDataset(Dataset):
         print(self.spark_df.count())
         self.spark_df.show()
         self.df = self.spark_df.toPandas()
-        
+
     
     def __len__(self):
         return len(self.df)
@@ -81,7 +81,7 @@ class TrainingDataset(Dataset):
         img = Image.open(img_path).convert('RGB')
 
         labels = self.df.iloc[idx][LABELS]
-        labels = labels.values
+        labels = labels.astype(np.float32).values
         labels = torch.from_numpy(labels)
         print(labels)
         if self.transform:
