@@ -8,6 +8,7 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import udf
+from pyspark.sql.functions import col , column
 
 import os.path as path
 
@@ -52,7 +53,7 @@ class TrainingDataset(Dataset):
 
         if self.uncertainty_strategy == 'best':
             for colName in LABELS:
-                self.df.select(colName).cast("float").replace(np.NaN, 0.0)
+                self.df.withColumn(colName, col(colName).cast("float")).replace(np.NaN, 0.0)
         self.df.show()
     
     def __len__(self):
