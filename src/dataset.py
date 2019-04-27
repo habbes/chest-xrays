@@ -53,6 +53,7 @@ class TrainingDataset(Dataset):
         return len(self.df.columns)
 
     def __getitem__(self, idx):
+        self.df.show()
         df_list = self.df.collect()
         sub_path = df_list[idx]['Path']
         img_path = path.join(self.data_dir, sub_path)
@@ -72,6 +73,7 @@ class TrainingDataset(Dataset):
             return img, labels
     
     def _get_labels_with_best_uncertain_values(self, idx):
+        self.df.show()
         df_list = self.df.collect()
         labels = df_list[idx][LABELS].astype(np.float32).replace(np.NaN, 0.0)
         ones_labels = ['Atelectasis', 'Edema']
