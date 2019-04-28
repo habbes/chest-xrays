@@ -34,25 +34,68 @@ Before running code, you will be required to activate conda environment:
 conda activate pyspark_env
 ```
 
-## Training the model
+**You should have Spark 2.4 installed and properly configured.**
 
-You can train the model by running the `start.py` script:
+## Saved reference model
+
+Our best performing model, the one referenced in our report, is saved as a
+series of `.pth` files in `models/report_baseline/m1` and `models/report_baseline/m2`.
+These are loaded as an ensemble when doing inference.
+
+## Training models
+
+There are a number of models based on different strategies and architectures that were
+implemented in this project. There are separate scripts to train these models, each
+with a filename like `run_{modelname}.py`.
+
+You would run the scripts by using the command `python run_{modelname}.py`. Some of
+the scripts accept a number of arguments. You can find out more about available
+arguments for a script adding a `--help` argument.
+
+Here are examples of running the main models:
+
+### Baseline model
+
+To train our baseline, and best-performing model, run the following script:
 
 ```
-python src/run_train.py
+python src/run_baseline_ubest_fine.py
 ```
 
-The script accepts a number of parameters like learning rate, number of epochs, etc.
-to allow you to tune the training process, use `-h` option to see all available options:
+This trains an ensemble of RestNet-18 pretrained networks with full network finetuning.
+
+The models will be saved to the `models/baseline_ubest_fine` directory. Two models will
+be trained, with two checkpoints saved for each. The models' checkpoints and results metrics
+will be saved in `models/baseline_ubest_fine/m1` and `models/baseline_ubest_fine/m2`.
+Charts of with overall scores of the ensemble will be saved in `models/baseline_ubest_fine` folder.
+
+Here's a summary of the output folder structure:
 
 ```
-python src/run_train.py -h
+models/
+  baseline_ubest_fine/       -> contains plots of ensemble scores
+    m1/                      -> contains metrics .pth snaphosts files of the first model
+    m2/                      -> contains metrics and .pth snaphosts of the second model
 ```
 
-### Saved model
+### Specialized models for frontal and lateral images
 
-The best model is saved in `model/model.pth` by default. You can change where the model is saved by setting
-the `--output_path` option.
+Script to run:
+
+```
+python src/run_multiside.py
+```
+
+Output folder structure:
+
+```
+models/
+  multiside/    -> contains plots of the final ensemble
+    base/       -> contains .pth snapshots and metrics of the base model
+    frontal/    -> contains .pth snapshots and metrics of the frontal model
+    lateral     -> contains .pth snaphosts and metrics of the lateral model
+```
+
 
 ## Prediction
 
@@ -86,8 +129,14 @@ CheXpert-v1.0/valid/patient00000/study2,0.5924145688620425,0.046450412719997725,
 
 ### Specifying model for prediction
 
-By default, the program will look for the model in `model/model.pth`. You can specify
-a different model to load using the `--model_path` option.
+By default, the program will look for the `.pth` files in `models/report_baseline/m1` and `models/baseline/m2` and use them as an ensemble model for doing predicitions. You can specify
+a different model to load using the `--model_dirs` option. This should be a comma-separated list of directories containing `.pth` files.
+
+For example:
+
+```
+python src/run_predict --model_dirs=models/mymodel/m1,models/mymodel/m2
+```
 
 
 For more information about this command run:
