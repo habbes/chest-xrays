@@ -9,3 +9,4 @@ results/*
 *.log
 models/*
 !models/.gitkeep
+metastore_db
