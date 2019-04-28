@@ -4,7 +4,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import udf
@@ -18,8 +17,6 @@ spark = SparkSession.builder \
     .master("local[4]") \
     .config("spark.driver.memory","11G") \
     .config("spark.driver.maxResultSize", "8G") \
-    .config("spark.jars.packages", "JohnSnowLabs:spark-nlp:1.8.2") \
-    .config("spark.jars.packages", "databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11") \
     .config("spark.kryoserializer.buffer.max", "500m") \
     .getOrCreate()
 
