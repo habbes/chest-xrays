@@ -59,7 +59,7 @@ Here are examples of running the main models:
 To train our baseline, and best-performing model, run the following script:
 
 ```
-python src/run_baseline_ubest_fine.py
+python run_baseline_ubest_fine.py
 ```
 
 This trains an ensemble of RestNet-18 pretrained networks with full network finetuning.
@@ -83,7 +83,7 @@ models/
 Script to run:
 
 ```
-python src/run_multiside.py
+python run_multiside.py
 ```
 
 Output folder structure:
@@ -102,7 +102,7 @@ models/
 To run inference on a dataset, use the following command:
 
 ```
-python src/run_predict.py <input_csv> <output_csv>
+python run_predict.py <input_csv> <output_csv>
 ```
 where:
 
@@ -127,6 +127,9 @@ CheXpert-v1.0/valid/patient00000/study1,0.18182496720710062,0.18340450985343382,
 CheXpert-v1.0/valid/patient00000/study2,0.5924145688620425,0.046450412719997725,0.6075448519014384,0.17052412368729153,0.06505159298527952
 ```
 
+Note that the `run_predict.py` command was designed this way in order to be
+compatible with the [CheXpert competition](https://stanfordmlgroup.github.io/competitions/chexpert/) submission process.
+
 ### Specifying model for prediction
 
 By default, the program will look for the `.pth` files in `models/report_baseline/m1` and `models/baseline/m2` and use them as an ensemble model for doing predicitions. You can specify
@@ -135,12 +138,12 @@ a different model to load using the `--model_dirs` option. This should be a comm
 For example:
 
 ```
-python src/run_predict --model_dirs=models/mymodel/m1,models/mymodel/m2
+python run_predict <input_csv> <output_csv> --model_dirs=models/mymodel/m1,models/mymodel/m2
 ```
 
 
 For more information about this command run:
 
 ```
-python src/run_predict -h
+python run_predict -h
 ```
