@@ -138,12 +138,12 @@ a different model to load using the `--model_dirs` option. This should be a comm
 For example:
 
 ```
-python run_predict <input_csv> <output_csv> --model_dirs=models/mymodel/m1,models/mymodel/m2
+python run_predict.py <input_csv> <output_csv> --model_dirs=models/mymodel/m1,models/mymodel/m2
 ```
 
 
 For more information about this command run:
 
 ```
-python run_predict -h
+python run_predict.py -h
 ```
